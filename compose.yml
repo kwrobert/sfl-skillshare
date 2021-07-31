@@ -128,8 +128,8 @@ services:
     networks:
       prefect-server: null
     ports:
-    - published: 8080
-      target: 8090
+    - published: 8090
+      target: 8080
     restart: always
   neo4j:
     image: neo4j

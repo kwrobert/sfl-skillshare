@@ -120,7 +120,7 @@ def load_neo(users):
 
 def load_postgres(users):
     conn = psycopg2.connect(
-        host="localhost", database="sfl", user="postgres", password="postgres"
+        host="localhost", port=5433, database="sfl", user="postgres", password="postgres"
     )
     cur = conn.cursor()
     cur.executemany(
