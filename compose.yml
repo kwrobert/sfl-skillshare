@@ -1,0 +1,48 @@
+services:
+  neo4j:
+    image: neo4j
+    ports:
+      - 7687:7687
+      - 7474:7474
+    volumes:
+      - neo4j-vol:/data
+    environment:
+      NEO4J_AUTH: neo4j/password
+  postgres:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-vol:/var/lib/postgresql/data
+  postgres-adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongo-vol:/data/db
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: "mongodb://root:example@mongo:27017/"
+volumes:
+  postgres-vol:
+  neo4j-vol:
+  mongo-vol:
