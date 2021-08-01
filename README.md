@@ -86,3 +86,23 @@ hello-kubernetes   *       k8s-default-hellokub-1c645ae349-2013837538.us-east-1.
 To see if your appplication works, copy and paste the `ADDRESS` field of the `hello-kubernetes` Ingress controller into your browser. You should see something like the following: 
 
 ![](./docs/figures/hello-kubernetes-success.png)
+
+With functional Kubernetes infrastructure in place, we now need to migrate our local `docker-compose` development setup to work with Kubernetes.
+
+## Migrating from Docker Compose to Production Kubernetes
+
+As always, someone has made a wonderful tool to help us with this process and
+automate a lot of the steps. It's called [Kompose](https://kompose.io/), and
+we'll be making use of it here.
+
+## DockerHub Rate Limiting
+
+To avoid image pull rate limits, create a secret and authenticate image pull:
+
+```
+kubectl create secret generic regcred \
+    --from-file=.dockerconfigjson=$HOME/.docker/config.json \
+    --type=kubernetes.io/dockerconfigjson
+```
+
+This didn't work, so I copied everything over to AWS ECR

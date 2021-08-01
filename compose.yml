@@ -2,10 +2,8 @@ services:
   apollo:
     command: bash -c "./post-start.sh && npm run serve"
     depends_on:
-      graphql:
-        condition: service_started
-      hasura:
-        condition: service_started
+       - "graphql"
+       - "hasura"
     environment:
       GRAPHQL_SERVICE_HOST: http://graphql
       GRAPHQL_SERVICE_PORT: 4201
@@ -30,8 +28,7 @@ services:
   graphql:
     command: bash -c "prefect-server database upgrade -y && python src/prefect_server/services/graphql/server.py"
     depends_on:
-      hasura:
-        condition: service_started
+      - "hasura"
     environment:
       PREFECT_CORE_VERSION: 0.15.3
       PREFECT_SERVER_DB_CMD: prefect-server database upgrade -y
@@ -55,8 +52,7 @@ services:
   hasura:
     command: graphql-engine serve
     depends_on:
-      postgres:
-        condition: service_started
+      - "postgres"
     environment:
       HASURA_GRAPHQL_DATABASE_URL: postgresql://prefect:test-password@prefect-postgres:5432/prefect_server
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
@@ -102,8 +98,7 @@ services:
   towel:
     command: python src/prefect_server/services/towel/__main__.py
     depends_on:
-      graphql:
-        condition: service_started
+      - "graphql"
     environment:
       PREFECT_SERVER__HASURA__ADMIN_SECRET: hasura-secret-admin-secret
       PREFECT_SERVER__HASURA__HOST: hasura
@@ -114,8 +109,7 @@ services:
   ui:
     command: /intercept.sh
     depends_on:
-      apollo:
-        condition: service_started
+      - "apollo"
     environment:
       PREFECT_SERVER__APOLLO_URL: http://localhost:4200/graphql
       PREFECT_SERVER__BASE_URL: http://localhost:4200/graphql
@@ -149,7 +143,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-      - postgres-vol:/var/lib/postgresql/data
+      - postgres-vol:/var/lib/postgresql
   postgres-adminer:
     image: adminer
     restart: always
