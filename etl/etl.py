@@ -13,7 +13,7 @@ from prefect.tasks.postgres.postgres import PostgresExecute, PostgresFetch
 #     user="postgres",
 #     query="SELECT * FROM users",
 # )
-task_pg_get_all_users_with_friends = PostgresFetch(
+task_pg_get_all_users_with_friends_as_json = PostgresFetch(
     db_name="sfl",
     host="localhost",
     port=5433,
@@ -44,7 +44,7 @@ FROM users;
 def extract():
     logger = prefect.context.get("logger")
     logger.info("Hello from extract!")
-    rows = task_pg_get_all_users_with_friends.run(password="postgres")
+    rows = task_pg_get_all_users_with_friends_as_json.run(password="postgres")
     pprint.pprint(rows[0][0])
     return rows[0][0]
 
