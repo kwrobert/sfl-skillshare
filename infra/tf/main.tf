@@ -4,12 +4,7 @@ module "dev_cluster" {
   instance_type = "t2.medium"
 }
 
-# module "staging_cluster" {
-#   source        = "./cluster"
-#   cluster_name  = "staging"
-#   instance_type = "t2.micro"
-# }
-
+# Uncomment this to deploy another very expensive cluster
 # module "production_cluster" {
 #   source        = "./cluster"
 #   cluster_name  = "production"
