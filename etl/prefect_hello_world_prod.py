@@ -1,9 +1,10 @@
 import pprint
 import prefect
-# import pymongo
+import pymongo
 from prefect import task, Flow, Client
 from prefect.run_configs import KubernetesRun
 from prefect.storage import GitHub
+from prefect.tasks.postgres.postgres import PostgresExecute, PostgresFetch
 
 github_storage = GitHub(
     repo="kwrobert/sfl-skillshare",  # name of repo
