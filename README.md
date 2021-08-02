@@ -115,6 +115,19 @@ kubectl create secret generic regcred \
     --type=kubernetes.io/dockerconfigjson
 ```
 
+## Building Custom Image for Running Flows
+
+You'll need to build a custom Docker image for running Flows that has all the dependencies needed to run the flow. A Dockerfile for such an image is provided in `./infra/k8s/custom_prefect_agent/`. Build it and push to ECR with
+
+```
+cd infra/k8s/custom_prefect_agent/
+# Log in to ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 410118848099.dkr.ecr.us-east-1.amazonaws.com
+# Build and tag the image
+docker build -t 410118848099.dkr.ecr.us-east-1.amazonaws.com/prefect/custom-run-image .
+# Push it to ECR
+docker push 410118848099.dkr.ecr.us-east-1.amazonaws.com/prefect/custom-run-image
+```
 
 ## Misc 
 

@@ -5,6 +5,11 @@ from prefect import task, Flow, Client
 from prefect.run_configs import UniversalRun
 from prefect.tasks.postgres.postgres import PostgresExecute, PostgresFetch
 
+github_storage = GitHub(
+    repo="kwrobert/sfl-skillshare",  # name of repo
+    path="etl/prefect_hello_world_prod.py",  # location of flow file in repo
+    access_token_secret="GITHUB_ACCESS_TOKEN",  # name of personal access token secret
+)
 
 # task_pg_get_all_users = PostgresExecute(
 #     db_name="sfl",
@@ -15,7 +20,8 @@ from prefect.tasks.postgres.postgres import PostgresExecute, PostgresFetch
 # )
 task_pg_get_all_users_with_friends_as_json = PostgresFetch(
     db_name="sfl",
-    host="localhost",
+    host="postgres.default.svc.cluster.local",
+    # Don't want to conflict with Prefect Postgres
     port=5433,
     user="postgres",
     query="""
@@ -70,37 +76,19 @@ def transform(users):
 def load(users):
     logger = prefect.context.get("logger")
     logger.info(f"Hello from load! I was given {users}. I will now put it elsewhere")
-    client = pymongo.MongoClient("mongodb://root:example@localhost:27017/")
+    client = pymongo.MongoClient("mongodb://root:example@mongo.default.svc.cluster.local:27017/")
     db = client.sfl
     db.users.insert_many(users)
 
 
-def define_pipeline():
 
-    with Flow("sfl-etl-pg-to-mongo") as flow:
-        data = extract()
-        transformed_data = transform(data)
-        load(transformed_data)
+with Flow("sfl-etl-pg-to-mongo") as flow:
+    data = extract()
+    transformed_data = transform(data)
+    load(transformed_data)
 
-    # Register the flow under the "sfl" project
-    flow.run_config = UniversalRun(labels=["sfl"])
-    flow_id = flow.register(project_name="sfl", labels=['sfl'])
-    return flow, flow_id
-    # return flow, None
-
-
-def main():
-    flow, flow_id = define_pipeline()
-    print(dir(flow))
-    print("flow_id = {}".format(flow_id))
-    # This just runs the flow locally on my laptop
-    # flow.run()
-    # This schedules the flow to run using an Agent and Executor
-    # client = Client()
-    # client.create_flow_run(
-    #     flow_id=flow_id,
-    # )
-
-
-if __name__ == "__main__":
-    main()
+flow.run_config = KubernetesRun(
+    labels=["sfl"],
+    image="410118848099.dkr.ecr.us-east-1.amazonaws.com/prefect/custom-run-image:latest",
+)
+flow.storage = github_storage

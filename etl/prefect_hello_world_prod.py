@@ -39,7 +39,6 @@ with Flow("sfl-hello-world-prod") as flow:
     transformed_data = transform(data)
     load(transformed_data)
 
-# Register the flow under the "sfl" project
 flow.run_config = KubernetesRun(
     labels=["sfl"],
     image="410118848099.dkr.ecr.us-east-1.amazonaws.com/prefect/custom-run-image:latest",
