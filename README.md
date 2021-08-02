@@ -43,7 +43,7 @@ You can provision multiple EKS clusters with a single `terraform apply`. First, 
 To test that all actually worked, you can deploy some simple test K8s applications. The Kubernetes manifests for these applications are all found in `infra/k8s`. To try one out, first configure your `kubectl` command line client to speak to the cluster(s) you just deployed. After a successful Terraform deployment, there should be `kubectl` configuration files in `infra/tf/kubeconfig_eks-${cluster_name}`. Pick the cluster you want to interact with, then configure `kubectl` to use it within
 
 ```bash
-export export KUBECONFIG=path/to/infra/tf/kubeconfig_eks-${cluster_name}`
+export KUBECONFIG=path/to/infra/tf/kubeconfig_eks-${cluster_name}`
 ```
 
 NOTE: This will only persist for your current shell session.
@@ -53,7 +53,7 @@ application that displays a message, the name of the pod and details of the
 node it's deployed to.](https://github.com/paulbouwer/hello-kubernetes):
 
 ```bash
-kubectl apply -f infra/k8s/hello-world-full.yaml
+kubectl apply -f infra/k8s/k8s_cluster_test_manifests/hello-world-full.yaml
 ```
 
 This deploys a few Kubernetes resources:
@@ -99,10 +99,13 @@ we'll be making use of it here. From the root of the repo, run:
 kompose convert -f compose.yaml
 ```
 
-That will spit out a bunch of K8s manifests with all the services from the compose file. We won't be using any of the Prefect ones (we'll use Helm to dpeloy prefect later), but we will use all the ETL DB manifests. Those are already in `./infra/k8s/etl_db_manifests` and checked into VC.
+That will spit out a bunch of K8s manifests with all the services from the
+compose file. We won't be using any of the Prefect ones (we'll use Helm to
+deploy Prefect later), but we will use all the ETL DB manifests. Those are
+already in `./infra/k8s/etl_db_manifests` and checked into VC.
 
 
-### Migrating Images from DockerHub to ECR 
+## Migrating Images from DockerHub to ECR 
 
 Dockerhub has instantiated rate limits on the number of images you can pull with a
 free tier account. To avoid image pull rate limits, we're going to copy all the
@@ -115,7 +118,10 @@ python3 copy_docker_images_to_ecr.py
 
 ## Building Custom Image for Running Flows
 
-You'll need to build a custom Docker image for running Flows that has all the dependencies needed to run the Flow. A Dockerfile for an image with the Python DB driver modules we need is provided in `./infra/k8s/custom_prefect_agent/`. Build it and push to ECR with
+You'll need to build a custom Docker image for running Flows that has all the
+dependencies needed to run the Flow. A Dockerfile for an image with the Python
+DB driver modules we need is provided in `./infra/k8s/custom_prefect_agent/`.
+Build it and push to ECR with
 
 ```
 cd infra/k8s/custom_prefect_agent/
@@ -129,14 +135,24 @@ docker push 410118848099.dkr.ecr.us-east-1.amazonaws.com/prefect/custom-run-imag
 
 ## Deploying Prefect Using Helm
 
-The people from Prefect were kind enough to provide a Helm chart for deploying all the Prefect services to K8s. There was a bug with an environment variable in the UI service, so I just cloned their repo, made some quick fixes, and checked it into this repo. All the HELM code is in `./infra/k8s/prefect-server-helm`. You can deploy the Helm chart with: 
+The people from Prefect were kind enough to provide a Helm chart for deploying all the Prefect services to K8s. There was a bug with an environment variable in the UI service, so I just cloned their repo, made some quick fixes, and checked it into this repo. All the Helm code is in `./infra/k8s/prefect-server-helm`. You can deploy the Helm chart with: 
 
 ```
 cd infra/k8s/prefect-server-helm
 ./deploy-production-prefect.sh
 ```
 
-That script just runs `helm install` but points Helm to use the custom configuration values for the Helm chart in `my-values.yaml`.
+That script just runs `helm install` but points Helm to use the custom configuration values for the Helm chart in `my-values.yaml`. See if it worked within
+
+```
+helm list
+```
+
+Watch your pods come up with
+
+```
+kubectl get pods --watch
+```
 
 ## Deploying the ETL DB services
 
@@ -146,7 +162,14 @@ Gotta deploy those databases!
 kubectl apply -f infra/k8s/etl_db_manifests
 ```
 
-Once they are deployed, we need to load data into them. First, make sure the ports are forwarded by running the `scripts/port_forward_svcs.sh` script. Then, amazingly, you can just run the `load_data.py` script unmodified from the local development setup:
+Once they are deployed, we need to configure the Postgres DB. Do this within
+
+```
+cd scripts
+./config_dbs.sh
+```
+
+Now, we load data into them! First, make sure the ports are forwarded by running the `scripts/port_forward_svcs.sh` script. Then, amazingly, you can just run the `load_data.py` script unmodified from the local development setup:
 
 ```
 python3 etl/load_data.py
