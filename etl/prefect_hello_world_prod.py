@@ -9,7 +9,7 @@ from prefect.tasks.postgres.postgres import PostgresExecute, PostgresFetch
 github_storage = GitHub(
     repo="kwrobert/sfl-skillshare",  # name of repo
     path="etl/prefect_hello_world_prod.py",  # location of flow file in repo
-    # access_token_secret="GITHUB_ACCESS_TOKEN",  # name of personal access token secret
+    access_token_secret="GITHUB_ACCESS_TOKEN",  # name of personal access token secret
 )
 
 
