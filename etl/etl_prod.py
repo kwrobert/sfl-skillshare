@@ -2,7 +2,8 @@ import pprint
 import pymongo
 import prefect
 from prefect import task, Flow, Client
-from prefect.run_configs import UniversalRun
+from prefect.run_configs import KubernetesRun
+from prefect.storage import GitHub
 from prefect.tasks.postgres.postgres import PostgresExecute, PostgresFetch
 
 github_storage = GitHub(
