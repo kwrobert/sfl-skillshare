@@ -121,7 +121,10 @@ python3 copy_docker_images_to_ecr.py
 You'll need to build a custom Docker image for running Flows that has all the
 dependencies needed to run the Flow. A Dockerfile for an image with the Python
 DB driver modules we need is provided in `./infra/k8s/custom_prefect_agent/`.
-Build it and push to ECR with
+First, modify `./infra/k8s/custom_prefect_agent/config.toml` and add your
+Github Personal Access Token. This is needed so Prefect doesn't hit the
+unathenticated Github API rate limits when cloning the Flow definition from
+Github. Then, build and push to the image ECR with
 
 ```
 cd infra/k8s/custom_prefect_agent/
