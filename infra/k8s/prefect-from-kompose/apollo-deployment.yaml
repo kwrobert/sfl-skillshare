@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f compose.yml
+    kompose.version: 1.22.0 (955b78124)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: apollo
+  name: apollo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: apollo
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f compose.yml
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/prefect-server: "true"
+        io.kompose.service: apollo
+    spec:
+      containers:
+        - args:
+            - bash
+            - -c
+            - ./post-start.sh && npm run serve
+          env:
+            - name: GRAPHQL_SERVICE_HOST
+              value: http://graphql
+            - name: GRAPHQL_SERVICE_PORT
+              value: "4201"
+            - name: HASURA_API_URL
+              value: http://hasura:3000/v1alpha1/graphql
+            - name: PREFECT_API_HEALTH_URL
+              value: http://graphql:4201/health
+            - name: PREFECT_API_URL
+              value: http://graphql:4201/graphql/
+            - name: PREFECT_SERVER__TELEMETRY__ENABLED
+              value: "true"
+          image: prefecthq/apollo:core-0.15.3
+          livenessProbe:
+            exec:
+              command:
+                - curl --fail --silent "http://apollo:4200/.well-known/apollo/server-health" &> /dev/null || exit 1
+            failureThreshold: 60
+            initialDelaySeconds: 1
+            periodSeconds: 10
+            timeoutSeconds: 2
+          name: apollo
+          ports:
+            - containerPort: 4200
+          resources: {}
+      restartPolicy: Always
+status: {}

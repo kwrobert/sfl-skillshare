@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f compose.yml
+    kompose.version: 1.22.0 (955b78124)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: ui
+  name: ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: ui
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f compose.yml
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/prefect-server: "true"
+        io.kompose.service: ui
+    spec:
+      containers:
+        - args:
+            - /intercept.sh
+          env:
+            - name: PREFECT_SERVER__APOLLO_URL
+              value: http://apollo:4200/graphql
+            - name: PREFECT_SERVER__BASE_URL
+              value: http://apollo:4200/graphql
+          image: prefecthq/ui:core-0.15.3
+          livenessProbe:
+            exec:
+              command:
+                - curl --fail --silent --head "http://ui:8080/" &> /dev/null || exit 1
+            failureThreshold: 3
+            periodSeconds: 30
+            timeoutSeconds: 5
+          name: ui
+          ports:
+            - containerPort: 8080
+          resources: {}
+      restartPolicy: Always
+status: {}

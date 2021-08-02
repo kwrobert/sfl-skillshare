@@ -1,0 +1,50 @@
+---
+# Source: prefect-server/templates/apollo/ingress.yaml
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: prefect-server-apollo
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    kubernetes.io/ingress.class: alb
+  labels:
+    app.kubernetes.io/name: prefect-server
+    app.kubernetes.io/instance:  prefect-server
+    helm.sh/chart: prefect-server-0.0.0
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: apollo
+spec:
+  rules:
+    - host: "prefect-apollo.krobzaur.com"
+      http:
+        paths:
+          - path: /*
+            backend:
+              serviceName: prefect-server-apollo
+              servicePort: 4200
+---
+# Source: prefect-server/templates/ui/ingress.yaml
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: prefect-server-ui
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    kubernetes.io/ingress.class: alb
+  labels:
+    app.kubernetes.io/name: prefect-server
+    app.kubernetes.io/instance:  prefect-server
+    helm.sh/chart: prefect-server-0.0.0
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: ui
+spec:
+  rules:
+    - host: "prefect-ui.krobzaur.com"
+      http:
+        paths:
+          - path: /*
+            backend:
+              serviceName: prefect-server-ui
+              servicePort: 8080

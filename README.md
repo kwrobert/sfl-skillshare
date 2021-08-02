@@ -93,11 +93,21 @@ With functional Kubernetes infrastructure in place, we now need to migrate our l
 
 As always, someone has made a wonderful tool to help us with this process and
 automate a lot of the steps. It's called [Kompose](https://kompose.io/), and
-we'll be making use of it here.
+we'll be making use of it here. First there are a few steps to making this work:
 
-## DockerHub Rate Limiting
 
-To avoid image pull rate limits, create a secret and authenticate image pull:
+### Migrating Images from DockerHub to ECR 
+
+Dockerhub has instated rate limits on the number of images you can pull with a
+free tier account. To avoid image pull rate limits, we're going to copy all the
+images we need to AWS ECR. To do that, just execute [this handy script I found](https://alexwlchan.net/2020/11/copying-images-from-docker-hub-to-amazon-ecr/): 
+
+```bash
+pip3 install boto3
+python3 copy_docker_images_to_ecr.py
+```
+
+acreate a secret and authenticate image pull:
 
 ```
 kubectl create secret generic regcred \
@@ -105,4 +115,14 @@ kubectl create secret generic regcred \
     --type=kubernetes.io/dockerconfigjson
 ```
 
-This didn't work, so I copied everything over to AWS ECR
+
+## Misc 
+
+Quick way to go around the ALB Ingress and get the local Prefect CLI access to
+the Apollo API service for testing purposes. Also will let you access the UI on
+http://localhost:8080
+
+```
+kubectl port-forward svc/prefect-server-apollo 4200:4200
+kubectl port-forward svc/prefect-server-ui 8080:8080
+```

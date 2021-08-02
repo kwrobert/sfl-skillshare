@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f compose.yml
+    kompose.version: 1.22.0 (955b78124)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: neo4j
+  name: neo4j
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: neo4j
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f compose.yml
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: neo4j
+    spec:
+      containers:
+        - env:
+            - name: NEO4J_AUTH
+              value: neo4j/password
+          image: neo4j
+          name: neo4j
+          ports:
+            - containerPort: 7687
+            - containerPort: 7474
+          resources: {}
+          volumeMounts:
+            - mountPath: /data
+              name: neo4j-vol
+      restartPolicy: Always
+      volumes:
+        - name: neo4j-vol
+          persistentVolumeClaim:
+            claimName: neo4j-vol
+status: {}

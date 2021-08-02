@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f compose.yml
+    kompose.version: 1.22.0 (955b78124)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: graphql
+  name: graphql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: graphql
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f compose.yml
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/prefect-server: "true"
+        io.kompose.service: graphql
+    spec:
+      containers:
+        - args:
+            - bash
+            - -c
+            - prefect-server database upgrade -y && python src/prefect_server/services/graphql/server.py
+          env:
+            - name: PREFECT_CORE_VERSION
+              value: 0.15.3
+            - name: PREFECT_SERVER_DB_CMD
+              value: prefect-server database upgrade -y
+            - name: PREFECT_SERVER__DATABASE__CONNECTION_URL
+              value: postgresql://prefect:test-password@prefect-postgres:5432/prefect_server
+            - name: PREFECT_SERVER__HASURA__ADMIN_SECRET
+              value: hasura-secret-admin-secret
+            - name: PREFECT_SERVER__HASURA__HOST
+              value: hasura
+          image: prefecthq/server:core-0.15.3
+          livenessProbe:
+            exec:
+              command:
+                - curl --fail --silent "http://graphql:4201/health" &> /dev/null || exit 1
+            failureThreshold: 60
+            initialDelaySeconds: 1
+            periodSeconds: 20
+            timeoutSeconds: 2
+          name: graphql
+          ports:
+            - containerPort: 4201
+          resources: {}
+      restartPolicy: Always
+status: {}

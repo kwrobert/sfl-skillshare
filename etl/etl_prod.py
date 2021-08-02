@@ -93,8 +93,8 @@ def main():
     flow, flow_id = define_pipeline()
     print(dir(flow))
     print("flow_id = {}".format(flow_id))
-    # This just runs the flow locally
-    flow.run()
+    # This just runs the flow locally on my laptop
+    # flow.run()
     # This schedules the flow to run using an Agent and Executor
     # client = Client()
     # client.create_flow_run(

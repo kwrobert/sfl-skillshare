@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f compose.yml
+    kompose.version: 1.22.0 (955b78124)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: hasura
+  name: hasura
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: hasura
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f compose.yml
+        kompose.version: 1.22.0 (955b78124)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/prefect-server: "true"
+        io.kompose.service: hasura
+    spec:
+      containers:
+        - args:
+            - graphql-engine
+            - serve
+          env:
+            - name: HASURA_GRAPHQL_DATABASE_URL
+              value: postgresql://prefect:test-password@prefect-postgres:5432/prefect_server
+            - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+              value: "true"
+            - name: HASURA_GRAPHQL_LOG_LEVEL
+              value: warn
+            - name: HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE
+              value: "100"
+            - name: HASURA_GRAPHQL_SERVER_PORT
+              value: "3000"
+          image: hasura/graphql-engine:v1.3.3
+          livenessProbe:
+            exec:
+              command:
+                - wget -O - http://hasura:${HASURA_GRAPHQL_SERVER_PORT}/healthz &>/dev/null || exit 1
+            failureThreshold: 60
+            initialDelaySeconds: 1
+            periodSeconds: 10
+            timeoutSeconds: 2
+          name: hasura
+          ports:
+            - containerPort: 3000
+          resources: {}
+      restartPolicy: Always
+status: {}
