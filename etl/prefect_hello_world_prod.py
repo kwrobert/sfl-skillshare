@@ -3,7 +3,7 @@
 import prefect
 from prefect import task, Flow, Client
 from prefect.run_configs import UniversalRun
-from prefect.tasks.postgres.postgres import PostgresExecute, PostgresFetch
+# from prefect.tasks.postgres.postgres import PostgresExecute, PostgresFetch
 from prefect.storage import GitHub
 
 github_storage = GitHub(
