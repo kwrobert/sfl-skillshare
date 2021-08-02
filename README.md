@@ -98,7 +98,7 @@ we'll be making use of it here. First there are a few steps to making this work:
 
 ### Migrating Images from DockerHub to ECR 
 
-Dockerhub has instated rate limits on the number of images you can pull with a
+Dockerhub has instantiated rate limits on the number of images you can pull with a
 free tier account. To avoid image pull rate limits, we're going to copy all the
 images we need to AWS ECR. To do that, just execute [this handy script I found](https://alexwlchan.net/2020/11/copying-images-from-docker-hub-to-amazon-ecr/): 
 
@@ -107,13 +107,6 @@ pip3 install boto3
 python3 copy_docker_images_to_ecr.py
 ```
 
-acreate a secret and authenticate image pull:
-
-```
-kubectl create secret generic regcred \
-    --from-file=.dockerconfigjson=$HOME/.docker/config.json \
-    --type=kubernetes.io/dockerconfigjson
-```
 
 ## Building Custom Image for Running Flows
 
@@ -131,11 +124,23 @@ docker push 410118848099.dkr.ecr.us-east-1.amazonaws.com/prefect/custom-run-imag
 
 ## Misc 
 
-Quick way to go around the ALB Ingress and get the local Prefect CLI access to
-the Apollo API service for testing purposes. Also will let you access the UI on
-http://localhost:8080
+Quick way to go around the ALB Ingress and get access to all the services you need is to just forward the ports locally. To get localhost access to:
+- The Prefect Apollo API service (needed for the CLI)
+- The Prefect UI for dashboard/debugging 
+- The Mongo DB used in the ETL pipeline
+- The Postgres DB used in the ETL pipeline 
+- The Neo4j DB used in the ETL pipeline
+
+Just execute the convenience scripts at `scripts/port_forwards_svcs.py`:
 
 ```
-kubectl port-forward svc/prefect-server-apollo 4200:4200
-kubectl port-forward svc/prefect-server-ui 8080:8080
+./scripts/port_forward_svcs.py
+```
+
+Create a secret to authenticate image pull:
+
+```
+kubectl create secret generic regcred \
+    --from-file=.dockerconfigjson=$HOME/.docker/config.json \
+    --type=kubernetes.io/dockerconfigjson
 ```
