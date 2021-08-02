@@ -43,5 +43,6 @@ with Flow("sfl-hello-world-prod") as flow:
 flow.run_config = KubernetesRun(
     labels=["sfl"],
     image="410118848099.dkr.ecr.us-east-1.amazonaws.com/prefect/custom-run-image:latest",
+    env={"EXTRA_PIP_PACKAGES": "pymongo"}
 )
 flow.storage = github_storage
