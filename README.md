@@ -93,7 +93,13 @@ With functional Kubernetes infrastructure in place, we now need to migrate our l
 
 As always, someone has made a wonderful tool to help us with this process and
 automate a lot of the steps. It's called [Kompose](https://kompose.io/), and
-we'll be making use of it here. First there are a few steps to making this work:
+we'll be making use of it here. From the root of the repo, run: 
+
+```
+kompose convert -f compose.yaml
+```
+
+That will spit out a bunch of K8s manifests with all the services from the compose file. We won't be using any of the Prefect ones (we'll use Helm to dpeloy prefect later), but we will use all the ETL DB manifests. Those are already in `./infra/k8s/etl_db_manifests` and checked into VC.
 
 
 ### Migrating Images from DockerHub to ECR 
@@ -107,10 +113,9 @@ pip3 install boto3
 python3 copy_docker_images_to_ecr.py
 ```
 
-
 ## Building Custom Image for Running Flows
 
-You'll need to build a custom Docker image for running Flows that has all the dependencies needed to run the flow. A Dockerfile for such an image is provided in `./infra/k8s/custom_prefect_agent/`. Build it and push to ECR with
+You'll need to build a custom Docker image for running Flows that has all the dependencies needed to run the Flow. A Dockerfile for an image with the Python DB driver modules we need is provided in `./infra/k8s/custom_prefect_agent/`. Build it and push to ECR with
 
 ```
 cd infra/k8s/custom_prefect_agent/
@@ -120,6 +125,48 @@ aws ecr get-login-password --region us-east-1 | docker login --username AWS --pa
 docker build -t 410118848099.dkr.ecr.us-east-1.amazonaws.com/prefect/custom-run-image .
 # Push it to ECR
 docker push 410118848099.dkr.ecr.us-east-1.amazonaws.com/prefect/custom-run-image
+```
+
+## Deploying Prefect Using Helm
+
+The people from Prefect were kind enough to provide a Helm chart for deploying all the Prefect services to K8s. There was a bug with an environment variable in the UI service, so I just cloned their repo, made some quick fixes, and checked it into this repo. All the HELM code is in `./infra/k8s/prefect-server-helm`. You can deploy the Helm chart with: 
+
+```
+cd infra/k8s/prefect-server-helm
+./deploy-production-prefect.sh
+```
+
+That script just runs `helm install` but points Helm to use the custom configuration values for the Helm chart in `my-values.yaml`.
+
+## Deploying the ETL DB services
+
+Gotta deploy those databases! 
+
+```
+kubectl apply -f infra/k8s/etl_db_manifests
+```
+
+Once they are deployed, we need to load data into them. First, make sure the ports are forwarded by running the `scripts/port_forward_svcs.sh` script. Then, amazingly, you can just run the `load_data.py` script unmodified from the local development setup:
+
+```
+python3 etl/load_data.py
+```
+
+DBs up! Data loaded! Time to run our "production" flow!
+
+## Setting up Prefect
+
+Prefect requires a bit of configuration before you can run the ETL pipeline. First, create a project, then register the flow with:
+
+```
+prefect create project sfl
+prefect register --project sfl --path etl/etl_prod.py
+```
+
+After that, you can run the Flow with: 
+
+```
+prefect run --name sfl-etl-pg-to-mongo
 ```
 
 ## Misc 
