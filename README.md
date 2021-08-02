@@ -214,3 +214,9 @@ kubectl create secret generic regcred \
     --from-file=.dockerconfigjson=$HOME/.docker/config.json \
     --type=kubernetes.io/dockerconfigjson
 ```
+
+# TODO
+
+- [ ] Get the ALB Apollo and UI ALB Ingresses working. They keep refusing my connections for whatever reason
+- [ ] Actually use proper secret management, TLS certificates, and authentication so this isn't all so horrifically insecure.
+- [ ] Add Route53 A record creation to terraform code for the Apollo and UI ALB ingresses
