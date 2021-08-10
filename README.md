@@ -116,15 +116,18 @@ pip3 install boto3
 python3 copy_docker_images_to_ecr.py
 ```
 
+To copy more images, add their Dockerhub tags to the `IMAGE_TAGS` list at the top of the `copy_docker_images_to_ecr.py` Python script.
+
 ## Building Custom Image for Running Flows
 
-You'll need to build a custom Docker image for running Flows that has all the
-dependencies needed to run the Flow. A Dockerfile for an image with the Python
-DB driver modules we need is provided in `./infra/k8s/custom_prefect_agent/`.
-First, modify `./infra/k8s/custom_prefect_agent/config.toml` and add your
-Github Personal Access Token. This is needed so Prefect doesn't hit the
-unathenticated Github API rate limits when cloning the Flow definition from
-Github. Then, build and push to the image ECR with
+You'll need to build a custom Docker image for running Flows (Prefect-speak for
+pipelines/workflows) that has all the dependencies needed to run the Flow. A
+Dockerfile for an image with the Python DB driver modules we need is provided
+in `./infra/k8s/custom_prefect_agent/`. First, modify
+`./infra/k8s/custom_prefect_agent/config.toml` and add your Github Personal
+Access Token. This is needed so Prefect doesn't hit the unathenticated Github
+API rate limits when cloning the Flow definition from Github. Then, build and
+push to the image ECR with
 
 ```
 cd infra/k8s/custom_prefect_agent/
@@ -220,6 +223,10 @@ kubectl create secret generic regcred \
 
 # TODO
 
-- [ ] Get the ALB Apollo and UI ALB Ingresses working. They keep refusing my connections for whatever reason
+- [ ] Get the Apollo ALB and UI ALB Ingresses working. They keep refusing my connections for whatever reason
 - [ ] Actually use proper secret management, TLS certificates, and authentication so this isn't all so horrifically insecure.
 - [ ] Add Route53 A record creation to terraform code for the Apollo and UI ALB ingresses
+- [ ] Document domain and A record creation stuff
+- [ ] Incorporate Prefect helm chart deployment into TF code
+- [ ] Add all DB images to ECR image copy script and rewrite Docker compose file and K8s manifests to use ECR
+- [ ] Make this all private and add a single jump/bastion host for accessing the cluster and services
